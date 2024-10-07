@@ -22,9 +22,11 @@ def send_image(image_path):
         image_data = f.read()
 
     packet_size = 50  # Kích thước mỗi gói tin
+    image_size = len(image_data) #Độ lớn của ảnh
     total_packets = len(image_data) // packet_size + (1 if len(image_data) % packet_size > 0 else 0)
     print(f'Total packets to send: {total_packets}')
-
+    
+    start_time = time.time()
     for i in range(total_packets):
         start = i * packet_size
         end = start + packet_size
@@ -46,7 +48,13 @@ def send_image(image_path):
             ser.write(packet)  # Gửi lại nếu không nhận được xác nhận
 
         time.sleep(2)  # Tạm dừng giữa các gói tin
-
+    end_time = time.time()
+    total_time = end_time - start_time
+    print(f'Total transmission time: {total_time:.2f} seconds')
+    print(f'Image size: {image_size} bytes')
+    total_data_bits = image_size * 8
+    transmission_speed = total_data_bits / total_time
+    print(f'Transmission speed: {transmission_speed:.2f} bps')
     print('Image sent successfully!')
 
 # Truyền ảnh

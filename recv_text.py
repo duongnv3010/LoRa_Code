@@ -19,13 +19,13 @@ ser = serial.Serial("/dev/serial0", 9600, timeout=1)
 def receive_message():
     total_packets = 0
     received_message = []
-    packet_counter = 0
-
+    start_time = time.time()  # Bắt đầu tính thời gian khi nhận thông điệp
+    
     while True:
         if ser.in_waiting > 0:
             try:
                 # Đọc thông tin gói
-                line = ser.readline().decode('ascii').strip()
+                line = ser.readline().decode('utf-8').strip()
             except UnicodeDecodeError:
                 continue
 
@@ -33,18 +33,25 @@ def receive_message():
                 packet_info = line.split(' ')[1].split('/')
                 current_packet = int(packet_info[0])
                 total_packets = int(packet_info[1])
-
+                
                 print(f'Receiving packet {current_packet}/{total_packets}')
 
                 # Đọc nội dung gói tin
-                packet_data = ser.read(5).decode('ascii', errors='ignore')
-                received_message.append(packet_data)
+                packet_data = ser.read(30)  # Đọc tối đa 30 byte
+                packet_data = packet_data.decode('ascii', errors='ignore')
+                if packet_data:
+                    received_message.append(packet_data)
 
                 if current_packet == total_packets:
                     # Ghép các phần của thông điệp lại với nhau
                     full_message = ''.join(received_message)
-                    print(f'Full message received: {full_message}')
-                    received_message = []  # Reset để nhận lại lần tiếp theo
+
+                    # Ghi thông điệp vào file
+                    with open('received_message.txt', 'a') as file:
+                        file.write(full_message + '\n')  # Ghi thông điệp vào file
+                    print(f'Full message received and written to file: received_message.txt')
+
+                    break  # Kết thúc vòng lặp sau khi nhận toàn bộ thông điệp
 
 # Nhận thông điệp liên tục
 try:
